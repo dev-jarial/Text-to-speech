@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to Speech Conversion</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <h2>Text to Speech Conversion</h2>
+        <form onsubmit="event.preventDefault(); convertToSpeech();">
+            <input type="hidden" id="voice_id" name="voice_id" value="{{voice_id}}">
+            <label for="text">Text:</label>
+            <textarea id="text" name="text" rows="4" cols="50" required>{{text}}</textarea><br><br>
+
+            <!-- Model ID, Stability, Similarity Boost, Styles, Use Speaker Boost -->
+            <div class="settings">
+                <div class="setting">
+                    <label for="model_id">Model ID:</label>
+                    <input type="text" id="model_id" name="model_id" value="{{model_id}}" required>
+                </div>
+                <div class="setting">
+                    <label for="stability">Stability:</label>
+                    <input type="number" id="stability" name="stability" step="0.01" value="{{stability}}">
+                </div>
+                <div class="setting">
+                    <label for="similarity_boost">Similarity Boost:</label>
+                    <input type="number" id="similarity_boost" name="similarity_boost" step="0.01" value="{{similarity_boost}}">
+                </div>
+                <div class="setting">
+                    <label for="style">Style:</label>
+                    <input type="number" id="style" name="style" step="0.01" value="{{style}}">
+                </div>
+                <div class="setting">
+                    <label for="use_speaker_boost">Use Speaker Boost:</label>
+                    <input type="checkbox" id="use_speaker_boost" name="use_speaker_boost" {{'checked' if use_speaker_boost else ''}}>
+                </div>
+            </div>
+            
+            <!-- Convert to Speech Button -->
+            <button type="submit">Convert to Speech</button>
+        </form>
+
+        <!-- Audio Player -->
+        <audio id="audioPlayer" controls>
+            <source src="" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+    </div>
+
+    <script>
+        async function convertToSpeech() {
+            const text = document.getElementById("text").value;
+            const modelId = document.getElementById("model_id").value;
+            const stability = parseFloat(document.getElementById("stability").value);
+            const similarityBoost = parseFloat(document.getElementById("similarity_boost").value);
+            const style = parseFloat(document.getElementById("style").value);
+            const useSpeakerBoost = document.getElementById("use_speaker_boost").checked;
+
+            const voiceSettings = {
+                stability,
+                similarity_boost: similarityBoost,
+                style,
+                use_speaker_boost: useSpeakerBoost
+            };
+
+            const input_data = {
+                text,
+                model_id: modelId,
+                voice_settings: voiceSettings
+            };
+            const voice_id = document.getElementById("voice_id").value;
+
+            const response = await fetch(`/text_speech/${voice_id}`, {
+                method: "POST",
+                headers: {
+                    'xi-api-key': '0f40658ff5948ef90cd180b816da4c79',
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(input_data)
+            });
+
+            if (response.ok) {
+                const audioBlob = await response.blob();
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const audioPlayer = document.getElementById("audioPlayer");
+                audioPlayer.src = audioUrl;
+            } else {
+                console.error("Error converting text to speech:", response.statusText);
+            }
+        }
+    </script>
+
+</body>
+
+</html>
